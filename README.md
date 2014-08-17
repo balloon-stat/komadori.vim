@@ -55,10 +55,10 @@ komadori#periodic(time)
 
 #### グローバル変数
 
- `g:komadori_save_file`     保存するファイルの名前 `~/vim.gif`
- `g:komadori_periodic`      0 でない場合、その間隔でキャプチャを繰り返す `0` ミリ秒単位
- `g:komadori_interval`      1 フレーム当たりの時間 `30` 10 ミリ秒単位
- `g:komadori_margin_left`   ウィンドウの左の余白 `8`
- `g:komadori_margin_top`    ウィンドウの上の余白 `82`
- `g:komadori_margin_right`  ウィンドウの右の余白 `8`
- `g:komadori_margin_bottom` ウィンドウの下の余白 `8`
+ `g:komadori_save_file`     保存するファイルの名前 `~/vim.gif`  
+ `g:komadori_periodic`      0 でない場合、その間隔でキャプチャを繰り返す `0` ミリ秒単位  
+ `g:komadori_interval`      1 フレーム当たりの時間 `30` 10 ミリ秒単位  
+ `g:komadori_margin_left`   ウィンドウの左の余白 `8`  
+ `g:komadori_margin_top`    ウィンドウの上の余白 `82`  
+ `g:komadori_margin_right`  ウィンドウの右の余白 `8`  
+ `g:komadori_margin_bottom` ウィンドウの下の余白 `8`  
