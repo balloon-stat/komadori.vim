@@ -19,6 +19,12 @@ komadori#capture()
 画面を撮ります。
 
 ```
+komadori#keep()
+```
+
+その前に撮った画面を 1 回分長く表示するようにします。
+
+```
 komadori#stop()
 ```
 
