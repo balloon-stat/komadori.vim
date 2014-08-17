@@ -42,15 +42,33 @@ $delays = @()
 
 $in = ""
 $delay = $interval
-while($in -ne "quit") {
-  $in = Read-Host
-  if ($in -eq "cap") {
+$count = 0
+while($True) {
+  if ($Host.UI.RawUI.KeyAvailable) {
+    $in = Read-Host
+  }
+  if ($in -eq "quit") {
+    break
+  }
+  elseif ($in -eq "cap") {
     $delays += $delay
     $delay = $interval
     $imgs += & $oneshot $margin
   }
   elseif ($in -eq "keep") {
     $delay += $interval
+  }
+  $in = ""
+  Start-Sleep -m 100
+
+  $count++
+  if ($count -gt 100) {
+    "getproc"
+    $procs = Get-Process | where {$_.ProcessName -eq "gvim"}
+    if (-not $procs) {
+      break
+    }
+    $count = 0
   }
 }
 
