@@ -49,10 +49,10 @@ function! komadori#capture()
     let s:delay = g:komadori_interval
   elseif s:has_magick
     if !s:captured
-      call s:set_geometry
+      call s:set_geometry()
       let s:captured = 1
     endif
-    let cmd = 'import -crop ' . s:geometry . ' ' . vimproc#shellescape(s:serialname())
+    let cmd = 'import -crop ' . s:geometry . ' ' . shellescape(s:serialname())
     call system(cmd)
   else
     echoerr 'This plugin needs PowerShell or ImageMagick'
@@ -128,7 +128,7 @@ function! s:bundle_posh()
 endfunction
 
 function! s:bundle_magick()
-  let cmd = 'convert -loop 0 -layers optimize -delay `=g:komadori_interval`'
+  let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
   let max = s:count_file_prefix
   let s:count_file_prefix = 0
   let infile = ''
@@ -136,7 +136,7 @@ function! s:bundle_magick()
     let infile .= ' ' . shellescape(serialname())
   endfor
   let s:count_file_prefix = 0
-  call vimproc#system(cmd . infile . ' ' . vimproc#shellescape(g:komadori_save_file))
+  call system(cmd . infile . ' ' . shellescape(g:komadori_save_file))
 endfunction
 
 function! komadori#keep()

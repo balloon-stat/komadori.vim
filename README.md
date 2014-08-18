@@ -29,7 +29,7 @@ komadori#keep()
 ```
 
 その前に撮った画面を 1 回分長く表示するようにします。  
-（Windowsのみ）
+（Windowsのみの関数）
 
 ```
 komadori#insert()
@@ -56,5 +56,6 @@ komadori#periodic(time)
  `g:komadori_margin_top`    ウィンドウの上の余白  Win32 `82`  他  `0`  
  `g:komadori_margin_right`  ウィンドウの右の余白  Win32 `8`   他  `0`  
  `g:komadori_margin_bottom` ウィンドウの下の余白  Win32 `8`   他  `0`  
- `g:komadori_temp_dir`      一時的な画像ファイルを置くディレクトリ `~/'  
+ `g:komadori_temp_dir`      一時的な画像ファイルを置くディレクトリ `~/`  
+
 
