@@ -133,7 +133,7 @@ function! s:bundle_magick()
   let s:count_file_prefix = 0
   let infile = ''
   for i in range(1, max)
-    let infile .= ' ' . shellescape(serialname())
+    let infile .= ' ' . shellescape(s:serialname())
   endfor
   let s:count_file_prefix = 0
   call system(cmd . infile . ' ' . shellescape(g:komadori_save_file))
