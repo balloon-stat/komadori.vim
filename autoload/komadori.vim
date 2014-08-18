@@ -2,16 +2,11 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let s:path = expand('<sfile>:p:h')
-let s:started = 0
+let s:binpath = s:path . '\..\bin\'
+let s:captured = 0
 let s:has_posh = executable('powershell')
 let s:has_magick = executable('import')
 let s:count_file_prefix = 0
-
-function! komadori#oneshot()
-  call komadori#capture()
-  call komadori#bundle()
-  echo 'komadori one shot'
-endfunction
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -19,7 +14,6 @@ function! komadori#insert()
     autocmd CursorMovedI * call komadori#capture()
     autocmd InsertLeave * call komadori#bundle() | echo 'komadori stop!'
   augroup END
-  call komadori#ready()
   echo 'komadori start!'
   call getchar()
   startinsert
@@ -30,88 +24,57 @@ function! komadori#periodic(time)
     echoerr 'This method needs PowerShell'
     return
   end
-  let save_pd = g:komadori_periodic
-  let g:komadori_periodic = a:time
-  echo 'komadori ready'
-  call komadori#ready()
-  while komadori#read() != 'start'
-  endwhile
-  echo 'start'
-  let g:komadori_periodic = save_pd
-endfunction
-
-function! komadori#ready()
-  if !s:has_posh
-    return
-  end
-  if s:started
-    echo 'already start komadori'
-    return
-  endif
-  let s:started = 1
-  let fpath = vimproc#shellescape(s:path  . '\..\bin\komadori.ps1')
-  let cmd = 'powershell -ExecutionPolicy RemoteSigned -File ' . fpath
-  let far = ' -filename '      . vimproc#shellescape(expand(g:komadori_save_file))
-  let par = ' -periodic '      . g:komadori_periodic
-  let iar = ' -interval '      . g:komadori_interval
-  let lar = ' -margin_left '   . g:komadori_margin_left
-  let tar = ' -margin_top '    . g:komadori_margin_top
-  let rar = ' -margin_right '  . g:komadori_margin_right
-  let bar = ' -margin_bottom ' . g:komadori_margin_bottom
-  let arg = far . par . iar . lar . tar . rar . bar
-  let s:kom = vimproc#popen2(cmd . arg)
-  "call vimproc#system_gui(cmd . arg)
-endfunction
-
-function! komadori#bundle()
-  augroup PluginKomadori
-    autocmd!
-  augroup END
-  if !s:started
-    return
-  endif
-  let s:started = 0
-  if s:has_posh
-    call s:kom.stdin.write("quit\n")
-    "call s:kom.waitpid()
-  elseif s:has_magick
-    let cmd = 'convert -loop 0 -layers optimize -delay `=g:komadori_interval`'
-    let max = s:count_file_prefix
-    let s:count_file_prefix = 0
-    let infile = ''
-    for i in range(1, max)
-      let infile .= ' ' . shellescape(serialname())
-    endfor
-    let s:count_file_prefix = 0
-    aklf
-    call system(cmd . infile . ' ' . shellescape(g:komadori_save_file))
-    !rm komadori_*.gif
-  endif
+  let fpath = vimproc#shellescape(s:binpath . 'periodic.ps1')
+  let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -File ' . fpath
+  let margin = ' ' . 
+        \   g:komadori_margin_left   . ' ' .
+        \   g:komadori_margin_top    . ' ' .
+        \   g:komadori_margin_right  . ' ' .
+        \   g:komadori_margin_bottom
+  let far = vimproc#shellescape(expand(g:komadori_save_file))
+  let arg = join([far, a:time, g:komadori_interval])
+  call system_gui(cmd . ' ' . arg . margin)
 endfunction
 
 function! komadori#capture()
   if s:has_posh
-    if !s:started
-      call komadori#ready()
-      while komadori#read() != "start"
-      endwhile
+    if !s:captured
+      let s:delays = ''
+      let s:delay = g:komadori_interval
+      let s:captured = 1
     endif
-    call komadori#write("cap")
+    let cmd = s:oneshot_cmd(vimproc#shellescape(s:serialname()))
+    call vimproc#popen2(cmd)
+    let s:delays .= s:delay . ' '
+    let s:delay = g:komadori_interval
   elseif s:has_magick
-    if !s:started
+    if !s:captured
       call s:set_geometry
-      let s:started = 1
+      let s:captured = 1
     endif
-    let cmd = 'import -crop ' . s:geometry . ' ' . shellescape(s:serialname())
+    let cmd = 'import -crop ' . s:geometry . ' ' . vimproc#shellescape(s:serialname())
     call system(cmd)
   else
     echoerr 'This plugin needs PowerShell or ImageMagick'
   endif
 endfunction
 
+function! s:oneshot_cmd(filename)
+  let fpath = vimproc#shellescape(s:binpath  . 'oneshot.ps1')
+  let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -Command '
+  let margin = ' @(' . 
+        \   g:komadori_margin_left   . ', ' .
+        \   g:komadori_margin_top    . ', ' .
+        \   g:komadori_margin_right  . ', ' .
+        \   g:komadori_margin_bottom .
+        \  ')'
+  let save_cmd = ' \| % { $_.save("' . a:filename . '")}'
+  return cmd . fpath . margin . save_cmd
+endfunction
+
 function! s:set_geometry()
   if executable('xdotool')
-    let geoinfo = vimproc#system('xwininfo -id `xdotool getactivewindow`')
+    let geoinfo = system('xwininfo -id `xdotool getactivewindow`')
     let width = matchstr(geoinfo, 'Width: \zs\d\+') - g:komadori_margin_right
     let height = matchstr(geoinfo, 'Height: \zs\d\+') - g:komadori_margin_bottom
     if g:komadori_margin_left > 0
@@ -136,29 +99,53 @@ function! s:serialname()
   return expand(file)
 endfunction
 
+function! komadori#bundle()
+  augroup PluginKomadori
+    autocmd!
+  augroup END
+  if !s:captured
+    echo 'no capture'
+    return
+  endif
+  let s:captured = 0
+  if s:has_posh
+    call s:bundle_posh()
+  elseif s:has_magick
+    call s:bundle_magick()
+  else
+    echoerr 'This plugin needs PowerShell or ImageMagick'
+  endif
+endfunction
+
+function! s:bundle_posh()
+  let fpath = vimproc#shellescape(s:binpath . 'bundle.ps1')
+  let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -File ' . fpath
+  let arg = vimproc#shellescape(expand(g:komadori_save_file)) . ' ' .
+        \   vimproc#shellescape(expand(g:komadori_temp_dir)) . ' ' .
+        \   s:delays . s:delay
+  call vimproc#popen2(cmd . ' ' . arg)
+  let s:count_file_prefix = 0
+endfunction
+
+function! s:bundle_magick()
+  let cmd = 'convert -loop 0 -layers optimize -delay `=g:komadori_interval`'
+  let max = s:count_file_prefix
+  let s:count_file_prefix = 0
+  let infile = ''
+  for i in range(1, max)
+    let infile .= ' ' . shellescape(serialname())
+  endfor
+  let s:count_file_prefix = 0
+  call vimproc#system(cmd . infile . ' ' . vimproc#shellescape(g:komadori_save_file))
+endfunction
+
 function! komadori#keep()
   if s:has_posh
-    call komadori#write("keep")
+    let s:delay += g:komadori_interval
   else
-    echoerr 'This method is used in Windows'
+    echoerr 'This method needs PowerShell'
   endif
 endfunction
 
-function! komadori#read()
-  if !s:started
-    echo "not start komadori"
-    return
-  endif
-  echo s:kom.stdout.read()
-endfunction
-
-function! komadori#write(arg)
-  if !s:started
-    echo "not start komadori"
-    return
-  endif
-  call s:kom.stdin.write(a:arg . "\n")
-endfunction
-
+let &cpo = s:save_cpo
 unlet s:save_cpo
-

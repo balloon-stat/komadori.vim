@@ -6,7 +6,6 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:komadori_save_file     = get(g:, 'komadori_save_file', '~/vim.gif')
-let g:komadori_periodic      = get(g:, 'komadori_periodic', 0)
 let g:komadori_interval      = get(g:, 'komadori_interval', 40)
 
 if has('win32')
