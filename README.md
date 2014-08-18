@@ -2,59 +2,59 @@ komadori.vim
 ============
 
 create animated gif file to screen capture of gvim in Windows by PowerShell or vim in Unix by ImageMagick  
-Vim�̍�Ɖ�ʂ�GIF�A�j�������܂��B  
-Windows�ł�PowerShell��Unix�ł�ImageMagick���g���܂��B  
-���̂��߁A���ꂼ��̋����������قȂ�܂��B  
+Vimの作業画面のGIFアニメを作ります。  
+WindowsではPowerShellをUnixではImageMagickを使います。  
+そのため、それぞれの挙動が少し異なります。  
 
-Windows�łł�vimproc���g���܂��B  
-Unix�ł�ImageMagick��xdotool�Axwininfo��K�v�Ƃ��܂��B  
+Windows版ではvimprocも使います。  
+Unix版はImageMagickとxdotool、xwininfoを必要とします。  
 
-���L�̊֐����L�[�Ƀ}�b�v���邩���ڌĂ�Ŏg���Ă��������B  
+下記の関数をキーにマップするか直接呼んで使ってください。  
 
 ```
 komadori#capture()
 ```
 
-��ʂ��B��܂��B  
+画面を撮ります。  
 
 
 ```
 komadori#bundle()
 ```
 
-�R�}�B����I���GIF�摜���܂Ƃ߂܂��B  
+コマ撮りを終わりGIF画像をまとめます。  
 
 ```
 komadori#keep()
 ```
 
-���̑O�ɎB������ʂ� 1 �񕪒����\������悤�ɂ��܂��B  
-�iWindows�̂݁j
+その前に撮った画面を 1 回分長く表示するようにします。  
+（Windowsのみ）
 
 ```
 komadori#insert()
 ```
 
-���s����ƃL�[���͂�����܂ő҂��܂��B  
-�L�[�������ꂽ��C���T�[�g���[�h�ɂȂ�ACursorMoveI�C�x���g��`komadori#capture()`���܂��B  
-�C���T�[�g���[�h�𔲂���ƁA`komadori#bundle()`�����s���I���܂��B  
+実行するとキー入力があるまで待ちます。  
+キーが押されたらインサートモードになり、CursorMoveIイベントで`komadori#capture()`します。  
+インサートモードを抜けると、`komadori#bundle()`を実行し終わります。  
 
 ```
 komadori#periodic(time)
 ```
 
-`time`�~���b�̊Ԋu�ŃL���v�`�����J��Ԃ��܂��B  
-�ꉞ300�J�E���g�Ŏ����I�ɏI���悤�ɂȂ��Ă��܂����A�傫�����������g������  
-�����������Ȃ�PC�̏ꍇ�A���ɋC��t���Ďg���Ă��������B  
-�iWindows�݂̂̊֐��j
+`time`ミリ秒の間隔でキャプチャを繰り返します。  
+一応300カウントで自動的に終わるようになっていますが、大きくメモリを使うため  
+メモリが少ないPCの場合、特に気を付けて使ってください。  
+（Windowsのみの関数）
 
-#### �O���[�o���ϐ�
+#### グローバル変数
 
- `g:komadori_save_file`     �ۑ�����t�@�C���̖��O `~/vim.gif`  
- `g:komadori_interval`      1 �t���[��������̎��� `40` 10 �~���b�P��  
- `g:komadori_margin_left`   �E�B���h�E�̍��̗]��  Win32 `8`   ��  `0`  
- `g:komadori_margin_top`    �E�B���h�E�̏�̗]��  Win32 `82`  ��  `0`  
- `g:komadori_margin_right`  �E�B���h�E�̉E�̗]��  Win32 `8`   ��  `0`  
- `g:komadori_margin_bottom` �E�B���h�E�̉��̗]��  Win32 `8`   ��  `0`  
- `g:komadori_temp_dir`      �ꎞ�I�ȉ摜�t�@�C����u���f�B���N�g�� `~/'  
+ `g:komadori_save_file`     保存するファイルの名前 `~/vim.gif`  
+ `g:komadori_interval`      1 フレーム当たりの時間 `40` 10 ミリ秒単位  
+ `g:komadori_margin_left`   ウィンドウの左の余白  Win32 `8`   他  `0`  
+ `g:komadori_margin_top`    ウィンドウの上の余白  Win32 `82`  他  `0`  
+ `g:komadori_margin_right`  ウィンドウの右の余白  Win32 `8`   他  `0`  
+ `g:komadori_margin_bottom` ウィンドウの下の余白  Win32 `8`   他  `0`  
+ `g:komadori_temp_dir`      一時的な画像ファイルを置くディレクトリ `~/'  
 
