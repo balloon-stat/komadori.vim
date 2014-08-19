@@ -48,12 +48,17 @@ function! komadori#capture()
     let s:delays .= s:delay . ' '
     let s:delay = g:komadori_interval
   elseif s:has_magick
-    if !s:captured
-      call s:set_geometry()
-      let s:captured = 1
+    if executable('xdotool')
+      if !s:captured
+        let s:win_id = matchstr(system('xdotool getactivewindow'), '\d\+')
+        call s:set_geometry()
+        let s:captured = 1
+      endif
+      let arg = ' -window ' . s:win_id . s:geometry . ' ' . shellescape(s:serialname())
+      call system('import' . arg)
+    else
+      echoerr 'This plugin needs xdotool'
     endif
-    let cmd = 'import -crop ' . s:geometry . ' ' . shellescape(s:serialname())
-    call system(cmd)
   else
     echoerr 'This plugin needs PowerShell or ImageMagick'
   endif
@@ -73,24 +78,20 @@ function! s:oneshot_cmd(filename)
 endfunction
 
 function! s:set_geometry()
-  if executable('xdotool')
-    let geoinfo = system('xwininfo -id `xdotool getactivewindow`')
-    let width = matchstr(geoinfo, 'Width: \zs\d\+') - g:komadori_margin_right
-    let height = matchstr(geoinfo, 'Height: \zs\d\+') - g:komadori_margin_bottom
-    if g:komadori_margin_left > 0
-      let x = '+' . g:komadori_margin_left
-    else
-      let x = '-' . g:komadori_margin_left
-    endif
-    if g:komadori_margin_top > 0
-      let y = '+' . g:komadori_margin_top
-    else
-      let y = '-' . g:komadori_margin_top
-    endif
-    let s:geometry = width . 'x' . height . x . y
+  let geoinfo = system('xwininfo -id `xdotool getactivewindow`')
+  let width = matchstr(geoinfo, 'Width: \zs\d\+') - g:komadori_margin_right
+  let height = matchstr(geoinfo, 'Height: \zs\d\+') - g:komadori_margin_bottom
+  if g:komadori_margin_left > 0
+    let x = '+' . g:komadori_margin_left
   else
-    echoerr 'This plugin needs xdotool'
+    let x = '-' . g:komadori_margin_left
   endif
+  if g:komadori_margin_top > 0
+    let y = '+' . g:komadori_margin_top
+  else
+    let y = '-' . g:komadori_margin_top
+  endif
+  let s:geometry = ' -crop ' . width . 'x' . height . x . y
 endfunction
 
 function! s:serialname()
@@ -136,7 +137,7 @@ function! s:bundle_magick()
     let infile .= ' ' . shellescape(s:serialname())
   endfor
   let s:count_file_prefix = 0
-  call system(cmd . infile . ' ' . shellescape(g:komadori_save_file))
+  call system(cmd . infile . ' ' . shellescape(expand(g:komadori_save_file)))
 endfunction
 
 function! komadori#keep()
