@@ -9,6 +9,7 @@ let s:has_magick = executable('import')
 let s:count_file_prefix = 0
 let s:has_vimproc = 0
 silent! let s:has_vimproc = vimproc#version()
+let s:kom = 0
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -23,9 +24,25 @@ endfunction
 
 function! komadori#periodic(time)
   if !s:has_posh
-    echoerr 'This method needs PowerShell'
-    return
-  end
+    call s:periodic_posh(a:time)
+  elseif s:has_magick
+    if s:has_vimproc && executable('xdotool')
+      call s:periodic_sh(a:time)
+    else
+      if s:has_vimproc
+        echoerr 'This plugin needs xdotool'
+      elseif executable('xdotool')
+        echoerr 'This method needs vimproc'
+      else
+        echoerr 'This method needs xdotool and vimproc'
+      endif
+    endif
+  else
+    echoerr 'This plugin needs PowerShell or ImageMagick'
+  endif
+endfunction
+
+function! s:periodic_posh(time)
   let fpath = shellescape(s:binpath . 'periodic.ps1')
   let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -File ' . fpath
   let margin = ' ' . 
@@ -36,6 +53,33 @@ function! komadori#periodic(time)
   let far = vimproc#shellescape(expand(g:komadori_save_file))
   let arg = join([far, a:time, g:komadori_interval])
   call system_gui(cmd . ' ' . arg . margin)
+endfunction
+
+function! s:periodic_sh(time)
+  if s:kom
+    echo 'periodic.sh is running'
+    return
+  endif
+  let cmd = 'rm ' . g:komadori_temp_dir . 'komadori_*.gif'
+  let in = input('run?' . cmd . ', (y)es or (n)o: ')
+  if in == 'y'
+    execute cmd
+  endif
+  let file = s:binpath . 'periodic.sh'
+  let id = matchstr(system('xdotool getactivewindow'), '\d\+')
+  let geometry = s:measure_geometry()
+  let s:kom = vimproc#popen2(['sh', file, a:time, g:komadori_temp_dir, id, geometry])
+endfunction
+
+function! komadori#stop_periodic()
+  if s:kom
+    call s:kom.kill(0)
+    let s:kom = 0
+    let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
+    let infile = g:komadori_temp_dir . 'komadori_*.gif'
+    let outfile = vimproc#shellescape(expand(g:komadori_save_file))
+    call vimproc#system_bg([cmd, infile, outfile])
+  endif
 endfunction
 
 function! komadori#capture()
@@ -59,9 +103,9 @@ function! komadori#capture()
       let arg = ' -window ' . s:win_id . s:geometry
       let name = s:serialname()
       if s:has_vimproc
-        call vimproc#system_bg('import' . arg . vimproc#shellescape(name))
+        call vimproc#system_bg('import -silent' . arg . vimproc#shellescape(name))
       else
-        call system('import' . arg . shellescape(name))
+        call system('import -silent' . arg . shellescape(name))
       endif
     else
       echoerr 'This plugin needs xdotool'
@@ -91,12 +135,12 @@ function! s:measure_geometry()
   if g:komadori_margin_left > 0
     let x = '+' . g:komadori_margin_left
   else
-    let x = '-' . g:komadori_margin_left
+    let x = '' . g:komadori_margin_left
   endif
   if g:komadori_margin_top > 0
     let y = '+' . g:komadori_margin_top
   else
-    let y = '-' . g:komadori_margin_top
+    let y = '' . g:komadori_margin_top
   endif
   return ' -crop ' . width . 'x' . height . x . y . ' '
 endfunction
