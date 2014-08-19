@@ -45,22 +45,23 @@ function! komadori#capture()
       let s:delay = g:komadori_interval
       let s:captured = 1
     endif
-    let cmd = s:oneshot_cmd(s:serialname())
-    call vimproc#system_bg(cmd)
+    let name = s:serialname()
+    call vimproc#system_bg(s:oneshot_cmd(name))
     let s:delays .= s:delay . ' '
     let s:delay = g:komadori_interval
   elseif s:has_magick
     if executable('xdotool')
       if !s:captured
         let s:win_id = matchstr(system('xdotool getactivewindow'), '\d\+')
-        call s:set_geometry()
+        let s:geometry = s:measure_geometry()
         let s:captured = 1
       endif
       let arg = ' -window ' . s:win_id . s:geometry
+      let name = s:serialname()
       if s:has_vimproc
-        call vimproc#system_bg('import' . arg . vimproc#shellescape(s:serialname()))
+        call vimproc#system_bg('import' . arg . vimproc#shellescape(name))
       else
-        call system('import' . arg . shellescape(s:serialname()))
+        call system('import' . arg . shellescape(name))
       endif
     else
       echoerr 'This plugin needs xdotool'
@@ -83,7 +84,7 @@ function! s:oneshot_cmd(filename)
   return cmd + [fpath . margin . save_cmd]
 endfunction
 
-function! s:set_geometry()
+function! s:measure_geometry()
   let geoinfo = system('xwininfo -id `xdotool getactivewindow`')
   let width = matchstr(geoinfo, 'Width: \zs\d\+') - g:komadori_margin_right
   let height = matchstr(geoinfo, 'Height: \zs\d\+') - g:komadori_margin_bottom
@@ -97,7 +98,7 @@ function! s:set_geometry()
   else
     let y = '-' . g:komadori_margin_top
   endif
-  let s:geometry = ' -crop ' . width . 'x' . height . x . y . ' '
+  return ' -crop ' . width . 'x' . height . x . y . ' '
 endfunction
 
 function! s:serialname()
@@ -117,8 +118,10 @@ function! komadori#bundle()
   let s:captured = 0
   if s:has_posh
     call s:bundle_posh()
+    echo "create" g:komadori_save_file
   elseif s:has_magick
     call s:bundle_magick()
+    echo "create" g:komadori_save_file
   else
     echoerr 'This plugin needs PowerShell or ImageMagick'
   endif
