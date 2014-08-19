@@ -2,11 +2,11 @@ komadori.vim
 ============
 
 Vimの作業画面をコマ撮りでGIFアニメにします。  
-WindowsではPowerShellをUnixではImageMagickを使います。  
+WindowsではPowerShellをX Window SystemではImageMagickを使います。  
 そのため、それぞれの挙動が少し異なります。  
 
-Windows版ではvimprocも使います。  
-Unix版はImageMagickとxdotool、xwininfoを必要とします。  
+他にはvimprocも必要とします。  
+X Window SystemではImageMagickとxdotool、xwininfoも必要です。  
 
 下記の関数をキーにマップするか直接呼んで使ってください。  
 基本的には`komadori#capture()`を繰り返し行い  
@@ -55,10 +55,24 @@ komadori#insert()
 komadori#periodic(time)
 ```
 
-（Windowsのみ）  
 `time`ミリ秒の間隔でキャプチャを繰り返します。  
 一応300カウントで自動的に終わるようになっていますが、大きくメモリを使うため  
 メモリが少ないPCの場合、特に気を付けて使ってください。  
+
+WindowsではPowerShellが立ち上がります。  
+
+他の環境ではshがバックグラウンドで起動します。  
+そのため`komadori#finish_periodic()`を実行して終わらせてください。  
+
+---
+
+```
+komadori#finish_periodic()
+```
+
+（Windows以外）  
+`komadori#periodic()`によって起動したプロセスを止めて  
+GIFファイルを作ります。  
 
 ---
 

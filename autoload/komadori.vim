@@ -9,7 +9,7 @@ let s:has_magick = executable('import')
 let s:count_file_prefix = 0
 let s:has_vimproc = 0
 silent! let s:has_vimproc = vimproc#version()
-let s:kom = 0
+let s:is_run_sh = 0
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -23,7 +23,7 @@ function! komadori#insert()
 endfunction
 
 function! komadori#periodic(time)
-  if !s:has_posh
+  if s:has_posh
     call s:periodic_posh(a:time)
   elseif s:has_magick
     if s:has_vimproc && executable('xdotool')
@@ -56,29 +56,36 @@ function! s:periodic_posh(time)
 endfunction
 
 function! s:periodic_sh(time)
-  if s:kom
+  if s:is_run_sh
     echo 'periodic.sh is running'
     return
   endif
-  let cmd = 'rm ' . g:komadori_temp_dir . 'komadori_*.gif'
-  let in = input('run?' . cmd . ', (y)es or (n)o: ')
-  if in == 'y'
-    execute cmd
+  let tmps = g:komadori_temp_dir . 'komadori_*.gif'
+  if glob(tmp)
+    let cmd = 'rm ' . tmps
+    let in = input('run? ' . cmd . ', for initialize. (y)es or (n)o: ')
+    if in == 'y'
+      execute '!' cmd
+    endif
   endif
-  let file = s:binpath . 'periodic.sh'
+  let cmdfile = s:path . '/../bin/periodic.sh'
   let id = matchstr(system('xdotool getactivewindow'), '\d\+')
   let geometry = s:measure_geometry()
-  let s:kom = vimproc#popen2(['sh', file, a:time, g:komadori_temp_dir, id, geometry])
+  let temp = expand(g:komadori_temp_dir)
+  echo 'start to push any key'
+  call getchar()
+  let s:kom = vimproc#popen2(['sh', cmdfile, a:time, temp, id, geometry])
+  let s:is_run_sh = 1
 endfunction
 
-function! komadori#stop_periodic()
-  if s:kom
-    call s:kom.kill(0)
-    let s:kom = 0
+function! komadori#finish_periodic()
+  if s:is_run_sh
+    call s:kom.kill(2)
+    let s:is_run_sh = 0
     let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
     let infile = g:komadori_temp_dir . 'komadori_*.gif'
     let outfile = vimproc#shellescape(expand(g:komadori_save_file))
-    call vimproc#system_bg([cmd, infile, outfile])
+    call vimproc#system_bg(join([cmd, infile, outfile]))
   endif
 endfunction
 
@@ -132,12 +139,12 @@ function! s:measure_geometry()
   let geoinfo = system('xwininfo -id `xdotool getactivewindow`')
   let width = matchstr(geoinfo, 'Width: \zs\d\+') - g:komadori_margin_right
   let height = matchstr(geoinfo, 'Height: \zs\d\+') - g:komadori_margin_bottom
-  if g:komadori_margin_left > 0
+  if g:komadori_margin_left >= 0
     let x = '+' . g:komadori_margin_left
   else
     let x = '' . g:komadori_margin_left
   endif
-  if g:komadori_margin_top > 0
+  if g:komadori_margin_top >= 0
     let y = '+' . g:komadori_margin_top
   else
     let y = '' . g:komadori_margin_top
