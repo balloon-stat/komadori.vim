@@ -7,6 +7,8 @@ let s:captured = 0
 let s:has_posh = executable('powershell')
 let s:has_magick = executable('import')
 let s:count_file_prefix = 0
+let s:has_vimproc = 0
+silent! let s:has_vimproc = vimproc#version()
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -24,7 +26,7 @@ function! komadori#periodic(time)
     echoerr 'This method needs PowerShell'
     return
   end
-  let fpath = vimproc#shellescape(s:binpath . 'periodic.ps1')
+  let fpath = shellescape(s:binpath . 'periodic.ps1')
   let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -File ' . fpath
   let margin = ' ' . 
         \   g:komadori_margin_left   . ' ' .
@@ -43,8 +45,8 @@ function! komadori#capture()
       let s:delay = g:komadori_interval
       let s:captured = 1
     endif
-    let cmd = s:oneshot_cmd(vimproc#shellescape(s:serialname()))
-    call vimproc#popen2(cmd)
+    let cmd = s:oneshot_cmd(s:serialname())
+    call vimproc#system(cmd)
     let s:delays .= s:delay . ' '
     let s:delay = g:komadori_interval
   elseif s:has_magick
@@ -54,8 +56,12 @@ function! komadori#capture()
         call s:set_geometry()
         let s:captured = 1
       endif
-      let arg = ' -window ' . s:win_id . s:geometry . ' ' . shellescape(s:serialname())
-      call system('import' . arg)
+      let arg = ' -window ' . s:win_id . s:geometry
+      if s:has_vimproc
+        call vimproc#system('import' . arg . vimproc#shellescape(s:serialname()))
+      else
+        call system('import' . arg . shellescape(s:serialname()))
+      endif
     else
       echoerr 'This plugin needs xdotool'
     endif
@@ -65,16 +71,16 @@ function! komadori#capture()
 endfunction
 
 function! s:oneshot_cmd(filename)
-  let fpath = vimproc#shellescape(s:binpath  . 'oneshot.ps1')
-  let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -Command '
+  let fpath = s:binpath  . 'oneshot.ps1'
+  let cmd = ['powershell', '-ExecutionPolicy', 'RemoteSigned', '-NoProfile', '-Command']
   let margin = ' @(' . 
         \   g:komadori_margin_left   . ', ' .
         \   g:komadori_margin_top    . ', ' .
         \   g:komadori_margin_right  . ', ' .
         \   g:komadori_margin_bottom .
         \  ')'
-  let save_cmd = ' \| % { $_.save("' . a:filename . '")}'
-  return cmd . fpath . margin . save_cmd
+  let save_cmd = ' | % { $_.save("' . a:filename . '")}'
+  return cmd + [fpath . margin . save_cmd]
 endfunction
 
 function! s:set_geometry()
@@ -91,7 +97,7 @@ function! s:set_geometry()
   else
     let y = '-' . g:komadori_margin_top
   endif
-  let s:geometry = ' -crop ' . width . 'x' . height . x . y
+  let s:geometry = ' -crop ' . width . 'x' . height . x . y . ' '
 endfunction
 
 function! s:serialname()
@@ -124,7 +130,7 @@ function! s:bundle_posh()
   let arg = vimproc#shellescape(expand(g:komadori_save_file)) . ' ' .
         \   vimproc#shellescape(expand(g:komadori_temp_dir)) . ' ' .
         \   s:delays . s:delay
-  call vimproc#popen2(cmd . ' ' . arg)
+  call vimproc#system(cmd . ' ' . arg)
   let s:count_file_prefix = 0
 endfunction
 
@@ -137,7 +143,11 @@ function! s:bundle_magick()
     let infile .= ' ' . shellescape(s:serialname())
   endfor
   let s:count_file_prefix = 0
-  call system(cmd . infile . ' ' . shellescape(expand(g:komadori_save_file)))
+  if s:has_vimproc
+    call vimproc#system(cmd . infile . ' ' . vimproc#shellescape(expand(g:komadori_save_file)))
+  else
+    call system(cmd . infile . ' ' . shellescape(expand(g:komadori_save_file)))
+  endif
 endfunction
 
 function! komadori#keep()

@@ -9,6 +9,12 @@ Windows版ではvimprocも使います。
 Unix版はImageMagickとxdotool、xwininfoを必要とします。  
 
 下記の関数をキーにマップするか直接呼んで使ってください。  
+基本的には`komadori#capture()`を繰り返し行い  
+最後に`komadori#bundle()`を実行すると  
+GIFファイルが`g:komadori_save_file`の値のファイルとして作られます。  
+
+
+---
 
 ```
 komadori#capture()
@@ -16,6 +22,7 @@ komadori#capture()
 
 画面を撮ります。  
 
+---
 
 ```
 komadori#bundle()
@@ -23,12 +30,16 @@ komadori#bundle()
 
 コマ撮りを終わりGIF画像をまとめます。  
 
+---
+
 ```
 komadori#keep()
 ```
 
-（Windowsのみ）
+（Windowsのみ）  
 その前に撮った画面を 1 回分長く表示するようにします。  
+
+---
 
 ```
 komadori#insert()
@@ -38,14 +49,18 @@ komadori#insert()
 キーが押されたらインサートモードになり、CursorMoveIイベントで`komadori#capture()`します。  
 インサートモードを抜けると、`komadori#bundle()`を実行し終わります。  
 
+---
+
 ```
 komadori#periodic(time)
 ```
 
-（Windowsのみ）
+（Windowsのみ）  
 `time`ミリ秒の間隔でキャプチャを繰り返します。  
 一応300カウントで自動的に終わるようになっていますが、大きくメモリを使うため  
 メモリが少ないPCの場合、特に気を付けて使ってください。  
+
+---
 
 #### グローバル変数
 
