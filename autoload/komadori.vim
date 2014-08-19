@@ -46,7 +46,7 @@ function! komadori#capture()
       let s:captured = 1
     endif
     let cmd = s:oneshot_cmd(s:serialname())
-    call vimproc#system(cmd)
+    call vimproc#system_bg(cmd)
     let s:delays .= s:delay . ' '
     let s:delay = g:komadori_interval
   elseif s:has_magick
@@ -58,7 +58,7 @@ function! komadori#capture()
       endif
       let arg = ' -window ' . s:win_id . s:geometry
       if s:has_vimproc
-        call vimproc#system('import' . arg . vimproc#shellescape(s:serialname()))
+        call vimproc#system_bg('import' . arg . vimproc#shellescape(s:serialname()))
       else
         call system('import' . arg . shellescape(s:serialname()))
       endif
@@ -130,7 +130,7 @@ function! s:bundle_posh()
   let arg = vimproc#shellescape(expand(g:komadori_save_file)) . ' ' .
         \   vimproc#shellescape(expand(g:komadori_temp_dir)) . ' ' .
         \   s:delays . s:delay
-  call vimproc#system(cmd . ' ' . arg)
+  call vimproc#system_bg(cmd . ' ' . arg)
   let s:count_file_prefix = 0
 endfunction
 
@@ -144,7 +144,7 @@ function! s:bundle_magick()
   endfor
   let s:count_file_prefix = 0
   if s:has_vimproc
-    call vimproc#system(cmd . infile . ' ' . vimproc#shellescape(expand(g:komadori_save_file)))
+    call vimproc#system_bg(cmd . infile . ' ' . vimproc#shellescape(expand(g:komadori_save_file)))
   else
     call system(cmd . infile . ' ' . shellescape(expand(g:komadori_save_file)))
   endif
