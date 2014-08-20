@@ -9,7 +9,8 @@ let s:has_magick = executable('import')
 let s:count_file_prefix = 0
 let s:has_vimproc = 0
 silent! let s:has_vimproc = vimproc#version()
-let s:is_run_sh = 0
+let s:run_periodic_sh = 0
+let s:run_periodic_vim = 0
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -27,7 +28,11 @@ function! komadori#periodic(time)
     call s:periodic_posh(a:time)
   elseif s:has_magick
     if s:has_vimproc && executable('xdotool')
-      call s:periodic_sh(a:time)
+      if has('clientserver') && g:komadori_use_vimserver
+        call s:periodic_vim(a:time)
+      else
+        call s:periodic_sh(a:time)
+      endif
     else
       if s:has_vimproc
         echoerr 'This plugin needs xdotool'
@@ -55,11 +60,7 @@ function! s:periodic_posh(time)
   call system_gui(cmd . ' ' . arg . margin)
 endfunction
 
-function! s:periodic_sh(time)
-  if s:is_run_sh
-    echo 'periodic.sh is running'
-    return
-  endif
+function! s:preproc_periodic()
   let tmps = g:komadori_temp_dir . 'komadori_*.gif'
   if len(glob(tmps))
     let cmd = 'rm ' . tmps
@@ -68,6 +69,15 @@ function! s:periodic_sh(time)
       execute '!' cmd
     endif
   endif
+endfunction
+
+function! s:periodic_sh(time)
+  if s:run_periodic_sh
+    echo 'periodic is running'
+    return
+  endif
+  let s:run_periodic_sh = 1
+  call s:preproc_periodic()
   let cmdfile = s:path . '/../bin/periodic.sh'
   let id = matchstr(system('xdotool getactivewindow'), '\d\+')
   let geometry = s:measure_geometry()
@@ -76,17 +86,53 @@ function! s:periodic_sh(time)
   call getchar()
   echo 'finish to call komadori#finish_periodic()'
   let s:kom = vimproc#popen2(['sh', cmdfile, a:time, temp, id, geometry])
-  let s:is_run_sh = 1
+endfunction
+
+function! s:periodic_vim(time)
+  if s:run_periodic_vim
+    echo 'periodic is running'
+    return
+  endif
+  let s:run_periodic_vim = 1
+  call s:preproc_periodic()
+  let launchfile = s:path . '/../bin/periodic.vim'
+  call vimproc#system_bg('vim --servername KOMADORI -u NONE -i NONE -n -N -S ' . launchfile)
+  let id = matchstr(system('xdotool getactivewindow'), '\d\+')
+  let geometry = s:measure_geometry()
+  let temp = expand(g:komadori_temp_dir)
+  echo 'start to push any key'
+  call getchar()
+  echo 'finish to call komadori#finish_periodic()'
+  let arg = join([a:time, temp, id, geometry], ', ')
+  let expr = 'SettingKomadori(' . arg . ')'
+  call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-expr', expr])
 endfunction
 
 function! komadori#finish_periodic()
-  if s:is_run_sh
+  if s:run_periodic_sh
     call s:kom.kill(2)
-    let s:is_run_sh = 0
+    let s:run_periodic_sh = 0
+  elseif s:run_periodic_vim
+    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>:q!<CR>''')
+    let s:run_periodic_vim = 0
+  endif
+  if s:run_periodic_sh || s:run_periodic_vim
     let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
     let infile = g:komadori_temp_dir . 'komadori_*.gif'
     let outfile = vimproc#shellescape(expand(g:komadori_save_file))
     call vimproc#system_bg(join([cmd, infile, outfile]))
+  endif
+endfunction
+
+function! komadori#pause_periodic()
+  if s:run_periodic_vim
+    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>:startinsert<CR>''')
+  endif
+endfunction
+
+function! komadori#restart_periodic()
+  if s:run_periodic_vim
+    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>''')
   endif
 endfunction
 

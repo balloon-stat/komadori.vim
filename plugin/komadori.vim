@@ -19,6 +19,7 @@ else
   let g:komadori_margin_top    = get(g:, 'komadori_margin_top', 0)
   let g:komadori_margin_right  = get(g:, 'komadori_margin_right', 0)
   let g:komadori_margin_bottom = get(g:, 'komadori_margin_bottom', 0)
+  let g:komadori_use_vimserver = get(g:, 'komadori_use_vimserver', 1)
 endif
 
 let g:loaded_komadori = 1
