@@ -61,7 +61,7 @@ function! s:periodic_sh(time)
     return
   endif
   let tmps = g:komadori_temp_dir . 'komadori_*.gif'
-  if glob(tmp)
+  if len(glob(tmps))
     let cmd = 'rm ' . tmps
     let in = input('run? ' . cmd . ', for initialize. (y)es or (n)o: ')
     if in == 'y'
@@ -74,6 +74,7 @@ function! s:periodic_sh(time)
   let temp = expand(g:komadori_temp_dir)
   echo 'start to push any key'
   call getchar()
+  echo 'finish to call komadori#finish_periodic()'
   let s:kom = vimproc#popen2(['sh', cmdfile, a:time, temp, id, geometry])
   let s:is_run_sh = 1
 endfunction
