@@ -56,13 +56,9 @@ komadori#periodic(time)
 ```
 
 `time`ミリ秒の間隔でキャプチャを繰り返します。  
-一応300カウントで自動的に終わるようになっていますが、大きくメモリを使うため  
-メモリが少ないPCの場合、特に気を付けて使ってください。  
+念のため 300カウントで自動的に終わるようになっています。  
 
-WindowsではPowerShellが立ち上がります。  
-
-他の環境ではshがバックグラウンドで起動します。  
-そのため`komadori#finish_periodic()`を実行して終わらせてください。  
+最後に`komadori#finish_periodic()`を実行して終わらせてください。  
 
 ---
 
@@ -70,7 +66,6 @@ WindowsではPowerShellが立ち上がります。
 komadori#finish_periodic()
 ```
 
-（Windows以外）  
 `komadori#periodic()`によって起動したプロセスを止めて  
 GIFファイルを作ります。  
 
@@ -80,7 +75,7 @@ GIFファイルを作ります。
 komadori#pause_periodic()
 ```
 
-（vimserverを使っているときのみ）  
+（`g:komadori_use_python`が`1`のときのみ）  
 `komadori#periodic()`によって始めた自動キャプチャの  
 ポーズを行います。  
 
@@ -90,7 +85,7 @@ komadori#pause_periodic()
 komadori#restart_periodic()
 ```
 
-（vimserverを使っているときのみ）  
+（`g:komadori_use_python`が`1`のときのみ）  
 `komadori#pause_periodic()`によってポーズしているキャプチャを  
 再開します。  
 
@@ -106,8 +101,7 @@ komadori#restart_periodic()
  `g:komadori_margin_right`  ウィンドウの右の余白  Win32 `8`   X  `0`  
  `g:komadori_margin_bottom` ウィンドウの下の余白  Win32 `8`   X  `0`  
  
- [X Window Systemのみ]  
- `g:komadori_use_vimserver` default `1`  
- `1`のとき`komadori#preriodic()`で vim を使う  
- `0`のとき`komadori#preriodic()`で sh を使う  
+ `g:komadori_use_python` default `1`  
+ `1`のとき`komadori#preriodic()`で if_python を使う  
+ `0`のとき`komadori#preriodic()`で sh または PowerShell を使う  
 

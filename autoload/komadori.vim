@@ -10,7 +10,16 @@ let s:count_file_prefix = 0
 let s:has_vimproc = 0
 silent! let s:has_vimproc = vimproc#version()
 let s:run_periodic_sh = 0
-let s:run_periodic_vim = 0
+let s:run_periodic_py = 0
+
+let s:path = expand("<sfile>:p:h")
+python <<EOM
+import os.path, sys, vim
+binpath = os.path.join(vim.eval('s:path'), '..', 'bin')
+if not binpath in sys.path:
+  sys.path.append(binpath)
+from periodic import Periodic
+EOM
 
 function! komadori#insert()
   augroup PluginKomadori
@@ -25,11 +34,17 @@ endfunction
 
 function! komadori#periodic(time)
   if s:has_posh
-    call s:periodic_posh(a:time)
+    if has('python') && g:komadori_use_python
+      call s:periodic_py(a:time)
+      python periodic.runWith('posh')
+    else
+      call s:periodic_posh(a:time)
+    endif
   elseif s:has_magick
     if s:has_vimproc && executable('xdotool')
-      if has('clientserver') && g:komadori_use_vimserver
-        call s:periodic_vim(a:time)
+      if has('python') && g:komadori_use_python
+        call s:periodic_py(a:time)
+        python periodic.runWith('magick')
       else
         call s:periodic_sh(a:time)
       endif
@@ -61,14 +76,21 @@ function! s:periodic_posh(time)
 endfunction
 
 function! s:preproc_periodic()
-  let tmps = g:komadori_temp_dir . 'komadori_*.gif'
-  if len(glob(tmps))
+  let tmps = expand(g:komadori_temp_dir) . 'komadori_*.gif'
+  if s:has_posh
+    let cmd = 'del ' . tmps
+  else
     let cmd = 'rm ' . tmps
+  endif
+  if len(glob(tmps))
     let in = input('run? ' . cmd . ', for initialize. (y)es or (n)o: ')
     if in == 'y'
-      execute '!' cmd
+      silent execute '!' cmd
     endif
   endif
+  echo 'finish to call komadori#finish_periodic()'
+  echo 'start to push any key'
+  call getchar()
 endfunction
 
 function! s:periodic_sh(time)
@@ -82,57 +104,60 @@ function! s:periodic_sh(time)
   let id = matchstr(system('xdotool getactivewindow'), '\d\+')
   let geometry = s:measure_geometry()
   let temp = expand(g:komadori_temp_dir)
-  echo 'start to push any key'
-  call getchar()
-  echo 'finish to call komadori#finish_periodic()'
   let s:kom = vimproc#popen2(['sh', cmdfile, a:time, temp, id, geometry])
 endfunction
 
-function! s:periodic_vim(time)
-  if s:run_periodic_vim
+function! s:periodic_py(time)
+  if s:run_periodic_py
     echo 'periodic is running'
     return
   endif
-  let s:run_periodic_vim = 1
+  let s:run_periodic_py = 1
   call s:preproc_periodic()
-  let launchfile = s:path . '/../bin/periodic.vim'
-  call vimproc#system_bg('vim --servername KOMADORI -u NONE -i NONE -n -N -S ' . launchfile)
-  let id = matchstr(system('xdotool getactivewindow'), '\d\+')
-  let geometry = s:measure_geometry()
   let temp = expand(g:komadori_temp_dir)
-  echo 'start to push any key'
-  call getchar()
-  echo 'finish to call komadori#finish_periodic()'
-  let arg = join([a:time, temp, id, geometry], ', ')
-  let expr = 'SettingKomadori(' . arg . ')'
-  call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-expr', expr])
+  if s:has_posh
+    let margin = s:margin()
+    let arg = { 'interval': a:time, 'temp_dir':temp, 'margin': margin, 'path': s:binpath}
+  elseif s:has_magick
+    let id = matchstr(system('xdotool getactivewindow'), '\d\+')
+    let geometry = s:measure_geometry()
+    let arg = { 'interval': a:time, 'temp_dir':temp, 'win_id': id, 'geometry': geometry}
+  else
+    echoerr 'can not execute periodic'
+  endif
+  python periodic = Periodic(vim.eval('arg'))
 endfunction
 
 function! komadori#finish_periodic()
   if s:run_periodic_sh
     call s:kom.kill(2)
     let s:run_periodic_sh = 0
-  elseif s:run_periodic_vim
-    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>:q!<CR>''')
-    let s:run_periodic_vim = 0
+  elseif s:run_periodic_py
+    python periodic.finish()
+    let s:run_periodic_py = 0
   endif
-  if s:run_periodic_sh || s:run_periodic_vim
+  let infile = g:komadori_temp_dir . 'komadori_*.gif'
+  if s:has_posh
+    let cnt = len(glob(infile))
+    let s:delay = g:komadori_interval
+    let s:delays = repeat(g:komadori_interval . ' ', cnt)
+    call s:bundle_posh()
+  elseif s:run_periodic_sh || s:run_periodic_py
     let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
-    let infile = g:komadori_temp_dir . 'komadori_*.gif'
     let outfile = vimproc#shellescape(expand(g:komadori_save_file))
     call vimproc#system_bg(join([cmd, infile, outfile]))
   endif
 endfunction
 
 function! komadori#pause_periodic()
-  if s:run_periodic_vim
-    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>:startinsert<CR>''')
+  if s:run_periodic_py
+    python periodic.pause()
   endif
 endfunction
 
 function! komadori#restart_periodic()
-  if s:run_periodic_vim
-    call vimproc#system_bg(['vim', '--servername', 'KOMADORI', '--remote-send', '''<C-\><C-N>''')
+  if s:run_periodic_py
+    python periodic.restart()
   endif
 endfunction
 
@@ -154,7 +179,7 @@ function! komadori#capture()
         let s:geometry = s:measure_geometry()
         let s:captured = 1
       endif
-      let arg = ' -window ' . s:win_id . s:geometry
+      let arg = ' -window ' . s:win_id . ' -crop ' . s:geometry
       let name = s:serialname()
       if s:has_vimproc
         call vimproc#system_bg('import -silent' . arg . vimproc#shellescape(name))
@@ -169,15 +194,19 @@ function! komadori#capture()
   endif
 endfunction
 
-function! s:oneshot_cmd(filename)
-  let fpath = s:binpath  . 'oneshot.ps1'
-  let cmd = ['powershell', '-ExecutionPolicy', 'RemoteSigned', '-NoProfile', '-Command']
-  let margin = ' @(' . 
+function! s:margin()
+  return ' @(' . 
         \   g:komadori_margin_left   . ', ' .
         \   g:komadori_margin_top    . ', ' .
         \   g:komadori_margin_right  . ', ' .
         \   g:komadori_margin_bottom .
         \  ')'
+endfunction
+
+function! s:oneshot_cmd(filename)
+  let fpath = s:binpath  . 'oneshot.ps1'
+  let cmd = ['powershell', '-ExecutionPolicy', 'RemoteSigned', '-NoProfile', '-Command']
+  let margin = s:margin()
   let save_cmd = ' | % { $_.save("' . a:filename . '")}'
   return cmd + [fpath . margin . save_cmd]
 endfunction
@@ -196,7 +225,7 @@ function! s:measure_geometry()
   else
     let y = '' . g:komadori_margin_top
   endif
-  return ' -crop ' . width . 'x' . height . x . y . ' '
+  return width . 'x' . height . x . y . ' '
 endfunction
 
 function! s:serialname()
