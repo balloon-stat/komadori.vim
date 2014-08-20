@@ -91,13 +91,38 @@ komadori#restart_periodic()
 
 ---
 
+```
+komadori#gyazo_post()
+```
+
+Gyazo.com に`g:komadori_save_file`の値のファイルを投稿します。  
+
+---
+
+```
+komadori#gyazo_url()
+```
+
+Gyazo.comに最後に投稿した画像のURLを返します。  
+
+---
+
+```
+komadori#open_gyazo_url()
+```
+
+openbrowser.vimで  
+Gyazo.comに最後に投稿した画像のURLを開きます。  
+
+---
+
 #### グローバル変数
 
  `g:komadori_save_file`     保存するファイルの名前 `~/vim.gif`  
  `g:komadori_temp_dir`      一時的な画像ファイルを置くディレクトリ `~/`  
  `g:komadori_interval`      1 フレーム当たりの時間 `40` 10 ミリ秒単位  
  `g:komadori_margin_left`   ウィンドウの左の余白  Win32 `8`   X  `0`  
- `g:komadori_margin_top`    ウィンドウの上の余白  Win32 `82`  X  `0`  
+ `g:komadori_margin_top`    ウィンドウの上の余白  Win32 `100` X  `0`  
  `g:komadori_margin_right`  ウィンドウの右の余白  Win32 `8`   X  `0`  
  `g:komadori_margin_bottom` ウィンドウの下の余白  Win32 `8`   X  `0`  
  
@@ -105,3 +130,13 @@ komadori#restart_periodic()
  `1`のとき`komadori#preriodic()`で if_python を使う  
  `0`のとき`komadori#preriodic()`で sh または PowerShell を使う  
 
+ #### コマンドリスト
+
+ KomadoriStartPeriodic   
+ KomadoriFinishPeriodic  
+ KomadoriCapture         
+ KomadoriBundle          
+ KomadoriInsert          
+ KomadoriGyazoPost       
+ KomadoriYankGyazoUrl    
+ KomadoriOpenGyazoUrl    

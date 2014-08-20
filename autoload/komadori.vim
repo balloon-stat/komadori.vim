@@ -19,6 +19,7 @@ binpath = os.path.join(vim.eval('s:path'), '..', 'bin')
 if not binpath in sys.path:
   sys.path.append(binpath)
 from periodic import Periodic
+import gyazo
 EOM
 
 function! komadori#insert()
@@ -285,6 +286,22 @@ function! komadori#keep()
     let s:delay += g:komadori_interval
   else
     echoerr 'This method needs PowerShell'
+  endif
+endfunction
+
+function! komadori#gyazo_post()
+  redir => s:gyazo_post_url
+    python print gyazo.post()
+  redir END
+endfunction
+
+function! komadori#gyazo_url()
+  return get(s:, 'gyazo_post_url', '')
+endfunction
+
+function! komadori#open_gyazo_url()
+  if exists('*OpenBrowser')
+    call OpenBrowser(komadori#gyazo_url())
   endif
 endfunction
 
