@@ -130,7 +130,7 @@ Gyazo.comに最後に投稿した画像のURLを開きます。
  `1`のとき`komadori#preriodic()`で if_python を使う  
  `0`のとき`komadori#preriodic()`で sh または PowerShell を使う  
 
- #### コマンドリスト
+#### コマンドリスト
 
  KomadoriStartPeriodic   
  KomadoriFinishPeriodic  

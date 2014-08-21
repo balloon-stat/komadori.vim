@@ -6,6 +6,7 @@ let s:binpath = s:path . '\..\bin\'
 let s:captured = 0
 let s:has_posh = executable('powershell')
 let s:has_magick = executable('import')
+let s:has_magick_convert = executable('convert')
 let s:count_file_prefix = 0
 let s:has_vimproc = 0
 silent! let s:has_vimproc = vimproc#version()
@@ -84,14 +85,27 @@ function! s:preproc_periodic()
     let cmd = 'rm ' . tmps
   endif
   if len(glob(tmps))
-    let in = input('run? ' . cmd . ', for initialize. (y)es or (n)o: ')
-    if in == 'y'
-      silent execute '!' cmd
+    echo 'run? ' . cmd . ', for initialize. (y)es or (n)o: '
+    let ch = ''
+    while ! (ch == 'y' || ch == 'n')
+      let ch = nr2char(getchar())
+    endwhile
+    if ch == 'y'
+      if s:has_vimproc
+        if s:has_posh
+          let cmd = 'cmd /c ' . cmd
+        endif
+        call vimproc#system(cmd)
+      else
+        silent execute '!' cmd
+      endif
     endif
   endif
-  echo 'finish to call komadori#finish_periodic()'
-  echo 'start to push any key'
+  redraw
+  echo 'start to push any key and finish to execute KomadoriFinishPeriodic'
   call getchar()
+  redraw
+  echo ''
 endfunction
 
 function! s:periodic_sh(time)
@@ -136,17 +150,20 @@ function! komadori#finish_periodic()
   elseif s:run_periodic_py
     python periodic.finish()
     let s:run_periodic_py = 0
+  else
+    echo 'komadori#periodic() is not runnning'
+    return
   endif
-  let infile = g:komadori_temp_dir . 'komadori_*.gif'
-  if s:has_posh
+  let infile = expand(g:komadori_temp_dir) . 'komadori_*.gif'
+  if s:has_posh && g:komadori_use_powershell
     let cnt = len(glob(infile))
     let s:delay = g:komadori_interval
     let s:delays = repeat(g:komadori_interval . ' ', cnt)
     call s:bundle_posh()
-  elseif s:run_periodic_sh || s:run_periodic_py
-    let cmd = 'convert -loop 0 -layers optimize -delay ' . g:komadori_interval
-    let outfile = vimproc#shellescape(expand(g:komadori_save_file))
-    call vimproc#system_bg(join([cmd, infile, outfile]))
+  else
+    let cmd = ['convert', '-loop', '0', '-layers', 'optimize', '-delay', g:komadori_interval]
+    let outfile = expand(g:komadori_save_file)
+    call vimproc#system_bg(cmd + [infile, outfile])
   endif
 endfunction
 
@@ -231,7 +248,7 @@ endfunction
 
 function! s:serialname()
   let s:count_file_prefix += 1
-  let file = g:komadori_temp_dir . 'komadori_' . s:count_file_prefix . '.gif'
+  let file = printf('%skomadori_%03d.gif', g:komadori_temp_dir, s:count_file_prefix)
   return expand(file)
 endfunction
 
@@ -244,10 +261,10 @@ function! komadori#bundle()
     return
   endif
   let s:captured = 0
-  if s:has_posh
+  if s:has_posh && g:komadori_use_powershell
     call s:bundle_posh()
     echo "create" g:komadori_save_file
-  elseif s:has_magick
+  elseif s:has_magick_convert
     call s:bundle_magick()
     echo "create" g:komadori_save_file
   else
