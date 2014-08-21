@@ -5,14 +5,14 @@ endif
 let s:save_cpo = &cpo
 set cpo&vim
 
-command! -nargs=1 KomadoriStartPeriodic  call komadori#periodic(<q-args>)
-command! -nargs=0 KomadoriFinishPeriodic call komadori#finish_periodic()
-command! -nargs=0 KomadoriCapture        call komadori#capture()
-command! -nargs=0 KomadoriBundle         call komadori#bundle()
-command! -nargs=0 KomadoriInsert         call komadori#insert()
-command! -nargs=0 KomadoriGyazoPost      call komadori#gyazo_post()
-command! -nargs=0 KomadoriYankGyazoUrl   call setreg(v:register == "" ? '"' : v:register, komadori#gyazo_url())
-command! -nargs=0 KomadoriOpenGyazoUrl   call komadori#open_gyazo_url()
+command! -nargs=1 ComadoriStartPeriodic  call komadori#periodic(<q-args>)
+command! -nargs=0 ComadoriFinishPeriodic call komadori#finish_periodic()
+command! -nargs=0 ComadoriCapture        call komadori#capture()
+command! -nargs=0 ComadoriBundle         call komadori#bundle()
+command! -nargs=0 ComadoriInsert         call komadori#insert()
+command! -nargs=0 ComadoriGyazoPost      call komadori#gyazo_post()
+command! -nargs=0 ComadoriYankGyazoUrl   call setreg(v:register == "" ? '"' : v:register, komadori#gyazo_url())
+command! -nargs=0 ComadoriOpenGyazoUrl   call komadori#open_gyazo_url()
 
 nnoremap <Plug>(komadori-capture)          :<C-u>call komadori#capture()<CR>
 nnoremap <Plug>(komadori-bundle)           :<C-u>call komadori#bundle()<CR>

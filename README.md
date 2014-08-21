@@ -132,11 +132,11 @@ Gyazo.comに最後に投稿した画像のURLを開きます。
 
 #### コマンドリスト
 
- KomadoriStartPeriodic   
- KomadoriFinishPeriodic  
- KomadoriCapture         
- KomadoriBundle          
- KomadoriInsert          
- KomadoriGyazoPost       
- KomadoriYankGyazoUrl    
- KomadoriOpenGyazoUrl    
+ ComadoriStartPeriodic   
+ ComadoriFinishPeriodic  
+ ComadoriCapture         
+ ComadoriBundle          
+ ComadoriInsert          
+ ComadoriGyazoPost       
+ ComadoriYankGyazoUrl    
+ ComadoriOpenGyazoUrl    

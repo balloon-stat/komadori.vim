@@ -102,7 +102,7 @@ function! s:preproc_periodic()
     endif
   endif
   redraw
-  echo 'start to push any key and finish to execute KomadoriFinishPeriodic'
+  echo 'start to push any key and finish to execute ComadoriFinishPeriodic'
   call getchar()
   redraw
   echo ''
@@ -188,6 +188,7 @@ function! komadori#capture()
     endif
     let name = s:serialname()
     call vimproc#system_bg(s:oneshot_cmd(name))
+    echo 'create' name
     let s:delays .= s:delay . ' '
     let s:delay = g:komadori_interval
   elseif s:has_magick
@@ -204,6 +205,7 @@ function! komadori#capture()
       else
         call system('import -silent' . arg . shellescape(name))
       endif
+      echo 'create' name
     else
       echoerr 'This plugin needs xdotool'
     endif
