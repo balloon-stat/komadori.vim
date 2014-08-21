@@ -155,15 +155,17 @@ function! komadori#finish_periodic()
     return
   endif
   let infile = expand(g:komadori_temp_dir) . 'komadori_*.gif'
-  if s:has_posh && g:komadori_use_powershell
+  if s:has_posh && g:komadori_bundle_use_powershell
     let cnt = len(glob(infile))
     let s:delay = g:komadori_interval
     let s:delays = repeat(g:komadori_interval . ' ', cnt)
     call s:bundle_posh()
-  else
+  elseif s:has_magick_convert
     let cmd = ['convert', '-loop', '0', '-layers', 'optimize', '-delay', g:komadori_interval]
     let outfile = expand(g:komadori_save_file)
     call vimproc#system_bg(cmd + [infile, outfile])
+  else
+    echoerr 'This plugin needs PowerShell or ImageMagick'
   endif
 endfunction
 
@@ -263,7 +265,7 @@ function! komadori#bundle()
     return
   endif
   let s:captured = 0
-  if s:has_posh && g:komadori_use_powershell
+  if s:has_posh && g:komadori_bundle_use_powershell
     call s:bundle_posh()
     echo "create" g:komadori_save_file
   elseif s:has_magick_convert

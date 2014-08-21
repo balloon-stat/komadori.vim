@@ -21,11 +21,11 @@ nnoremap <Plug>(komadori-pause-periodic)   :<C-u>call komadori#pause_periodic()<
 nnoremap <Plug>(komadori-restart-periodic) :<C-u>call komadori#restart_periodic()<CR>
 nnoremap <Plug>(komadori-finish-periodic)  :<C-u>call komadori#finish_periodic()<CR>
 
-let g:komadori_save_file      = get(g:, 'komadori_save_file', '~/vim.gif')
-let g:komadori_temp_dir       = get(g:, 'komadori_temp_dir', '~/')
-let g:komadori_interval       = get(g:, 'komadori_interval', 40)
-let g:komadori_use_python     = get(g:, 'komadori_use_python', 1)
-let g:komadori_use_powershell = get(g:, 'komadori_use_powershell', 1)
+let g:komadori_save_file             = get(g:, 'komadori_save_file', '~/vim.gif')
+let g:komadori_temp_dir              = get(g:, 'komadori_temp_dir', '~/')
+let g:komadori_interval              = get(g:, 'komadori_interval', 40)
+let g:komadori_use_python            = get(g:, 'komadori_use_python', 1)
+let g:komadori_bundle_use_powershell = get(g:, 'komadori_bundle_use_powershell', 1)
 
 if has('win32')
   let g:komadori_margin_left   = get(g:, 'komadori_margin_left', 8)

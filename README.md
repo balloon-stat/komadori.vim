@@ -1,17 +1,17 @@
 komadori.vim
 ============
 
-Vimの作業画面をコマ撮りでGIFアニメにします。  
-WindowsではPowerShellをX Window SystemではImageMagickを使います。  
+vimの作業画面をコマ撮りでGIFアニメにします。  
+windowsではPowerShellをX Window SystemではImageMagickを使います。  
 そのため、それぞれの挙動が少し異なります。  
 
 他にはvimprocも必要とします。  
-X Window SystemではImageMagickとxdotool、xwininfoも必要です。  
+x Window SystemではImageMagickとxdotool、xwininfoも必要です。  
 
 下記の関数をキーにマップするか直接呼んで使ってください。  
 基本的には`komadori#capture()`を繰り返し行い  
 最後に`komadori#bundle()`を実行すると  
-GIFファイルが`g:komadori_save_file`の値のファイルとして作られます。  
+gIFファイルが`g:komadori_save_file`の値のファイルとして作られます。  
 
 
 ---
@@ -21,6 +21,9 @@ komadori#capture()
 ```
 
 画面を撮ります。  
+一時的なGIFファイルを作って、その旨を表示するため  
+エコーさせないようにするには`:silent call komadori#capture()`  
+と実行してください。  
 
 ---
 
@@ -29,6 +32,7 @@ komadori#bundle()
 ```
 
 コマ撮りを終わりGIF画像をまとめます。  
+`g:komadori_save_file`の値のファイルとして作られます。
 
 ---
 
@@ -36,7 +40,7 @@ komadori#bundle()
 komadori#keep()
 ```
 
-（Windowsのみ）  
+（PowerShellのみ）  
 その前に撮った画面を 1 回分長く表示するようにします。  
 
 ---
@@ -68,6 +72,7 @@ komadori#finish_periodic()
 
 `komadori#periodic()`によって起動したプロセスを止めて  
 GIFファイルを作ります。  
+また単にGIFファイルをまとめたいときにも使うことできます。  
 
 ---
 
@@ -95,7 +100,7 @@ komadori#restart_periodic()
 komadori#gyazo_post()
 ```
 
-Gyazo.com に`g:komadori_save_file`の値のファイルを投稿します。  
+gyazo.com に`g:komadori_save_file`の値のファイルを投稿します。  
 
 ---
 
@@ -103,7 +108,7 @@ Gyazo.com に`g:komadori_save_file`の値のファイルを投稿します。
 komadori#gyazo_url()
 ```
 
-Gyazo.comに最後に投稿した画像のURLを返します。  
+gyazo.comに最後に投稿した画像のURLを返します。  
 
 ---
 
@@ -112,7 +117,7 @@ komadori#open_gyazo_url()
 ```
 
 openbrowser.vimで  
-Gyazo.comに最後に投稿した画像のURLを開きます。  
+gyazo.comに最後に投稿した画像のURLを開きます。  
 
 ---
 
@@ -127,9 +132,14 @@ Gyazo.comに最後に投稿した画像のURLを開きます。
  `g:komadori_margin_bottom` ウィンドウの下の余白  Win32 `8`   X  `0`  
  
  `g:komadori_use_python` default `1`  
- `1`のとき`komadori#preriodic()`で if_python を使う  
- `0`のとき`komadori#preriodic()`で sh または PowerShell を使う  
+ `1` のとき `komadori#preriodic()` で if_python を使います。  
+ `0` のとき `komadori#preriodic()` で sh または PowerShell を使います。  
 
+ `g:komadori_bundle_use_powershell` default `1`  
+ `komadori#bundle()` と `komadori#finish_periodic` で使われます。  
+ Windows で ImageMagick を使って画像をまとめたいときに、  
+ この値を `0` にすることで convert が実行されるように設定できます。  
+ 
 #### コマンドリスト
 
  ComadoriStartPeriodic   
