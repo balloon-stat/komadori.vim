@@ -14,7 +14,7 @@ command! -nargs=0 ComadoriGyazoPost      call komadori#gyazo_post()
 command! -nargs=0 ComadoriYankGyazoUrl   call setreg(v:register == "" ? '"' : v:register, komadori#gyazo_url())
 command! -nargs=0 ComadoriOpenGyazoUrl   call komadori#open_gyazo_url()
 
-nnoremap <Plug>(komadori-capture)          :<C-u>call komadori#capture()<CR>
+nnoremap <Plug>(komadori-capture)          :<C-u>silent call komadori#capture()<CR>
 nnoremap <Plug>(komadori-bundle)           :<C-u>call komadori#bundle()<CR>
 nnoremap <Plug>(komadori-keep)             :<C-u>call komadori#keep()<CR>
 nnoremap <Plug>(komadori-pause-periodic)   :<C-u>call komadori#pause_periodic()<CR>

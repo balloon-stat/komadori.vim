@@ -26,7 +26,7 @@ EOM
 function! komadori#insert()
   augroup PluginKomadori
     autocmd!
-    autocmd CursorMovedI * call komadori#capture()
+    autocmd CursorMovedI * silent call komadori#capture()
     autocmd InsertLeave * call komadori#bundle() | echo 'komadori stop!'
   augroup END
   echo 'komadori start!'
@@ -95,7 +95,7 @@ function! s:preproc_periodic()
         if s:has_posh
           let cmd = 'cmd /c ' . cmd
         endif
-        call vimproc#system(cmd)
+        call vimproc#system(split(cmd))
       else
         silent execute '!' cmd
       endif
@@ -150,20 +150,19 @@ function! komadori#finish_periodic()
   elseif s:run_periodic_py
     python periodic.finish()
     let s:run_periodic_py = 0
-  else
-    echo 'komadori#periodic() is not runnning'
-    return
   endif
   let infile = expand(g:komadori_temp_dir) . 'komadori_*.gif'
   if s:has_posh && g:komadori_bundle_use_powershell
-    let cnt = len(glob(infile))
+    let cnt = len(glob(infile, 0, 1))
     let s:delay = g:komadori_interval
     let s:delays = repeat(g:komadori_interval . ' ', cnt)
     call s:bundle_posh()
+    echo 'create' g:komadori_save_file
   elseif s:has_magick_convert
     let cmd = ['convert', '-loop', '0', '-layers', 'optimize', '-delay', g:komadori_interval]
     let outfile = expand(g:komadori_save_file)
     call vimproc#system_bg(cmd + [infile, outfile])
+    echo 'create' g:komadori_save_file
   else
     echoerr 'This plugin needs PowerShell or ImageMagick'
   endif
@@ -277,12 +276,11 @@ function! komadori#bundle()
 endfunction
 
 function! s:bundle_posh()
-  let fpath = vimproc#shellescape(s:binpath . 'bundle.ps1')
+  let fpath = s:binpath . 'bundle.ps1'
   let cmd = 'powershell -ExecutionPolicy RemoteSigned -NoProfile -File ' . fpath
-  let arg = vimproc#shellescape(expand(g:komadori_save_file)) . ' ' .
-        \   vimproc#shellescape(expand(g:komadori_temp_dir)) . ' ' .
-        \   s:delays . s:delay
-  call vimproc#system_bg(cmd . ' ' . arg)
+  let arg = [ expand(g:komadori_save_file) ,
+        \     expand(g:komadori_temp_dir)  ]
+  call vimproc#system_bg(split(cmd) + arg + split(s:delays . s:delay))
   let s:count_file_prefix = 0
 endfunction
 
