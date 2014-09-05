@@ -23,13 +23,13 @@ public struct RECT
 "@
     $rc = New-Object Rect
     $procs = Get-Process | where {$_.ProcessName -eq "gvim"}
-    if ($procs.Length -ne 1) {
+    if ($procs.Length -eq 0) {
         return $null
     }
   }
 
   process {
-    [void][Win32]::GetWindowRect($procs.MainWindowHandle, [ref]$rc)
+    [void][Win32]::GetWindowRect($procs[0].MainWindowHandle, [ref]$rc)
 
     $rc.Left += $margin[0]
     $rc.Top += $margin[1]

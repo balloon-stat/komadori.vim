@@ -9,9 +9,9 @@ windowsではPowerShellをX Window SystemではImageMagickを使います。
 x Window SystemではImageMagickとxdotool、xwininfoも必要です。  
 
 下記の関数をキーにマップするか直接呼んで使ってください。  
-基本的には`komadori#capture()`を繰り返し行い  
-最後に`komadori#bundle()`を実行すると  
-gIFファイルが`g:komadori_save_file`の値のファイルとして作られます。  
+基本的には `komadori#capture()` を繰り返し行い  
+最後に `komadori#bundle()` を実行すると  
+GIFファイルが `g:komadori_save_file` の値のファイルとして作られます。  
 
 
 ---
@@ -22,7 +22,7 @@ komadori#capture()
 
 画面を撮ります。  
 一時的なGIFファイルを作って、その旨を表示するため  
-エコーさせないようにするには`:silent call komadori#capture()`  
+エコーさせないようにするには `:silent call komadori#capture()`  
 と実行してください。  
 
 ---
@@ -32,7 +32,16 @@ komadori#bundle()
 ```
 
 コマ撮りを終わりGIF画像をまとめます。  
-`g:komadori_save_file`の値のファイルとして作られます。
+`g:komadori_save_file` の値のファイルとして作られます。  
+
+---
+
+```
+komadori#all_bundle()
+```
+
+`g:komadori_temp_dir` にある定型のファイル名のGIF画像をまとめます。  
+`g:komadori_save_file` の値のファイルとして作られます。  
 
 ---
 
@@ -46,66 +55,78 @@ komadori#keep()
 ---
 
 ```
-komadori#insert()
+komadori#cmdlist#start()
+```
+
+cmdlist に従い実行します。  
+cmdlist は１行目に cmdlist と書かれているかどうかで判断されます。  
+次の行から : で始まる場合はExコマンドとして  
+それ以外はノーマルコマンドとして実行します。  
+また１行毎に `komadori#capture()` します。  
+cmdlist が終端に達すると `komadori#bundle()` を実行し終わります。  
+
+---
+
+```
+komadori#insert#start()
 ```
 
 実行するとキー入力があるまで待ちます。  
-キーが押されたらインサートモードになり、CursorMoveIイベントで`komadori#capture()`します。  
-インサートモードを抜けると、`komadori#bundle()`を実行し終わります。  
+キーが押されたらインサートモードになり、CursorMoveIイベントで `komadori#capture()` します。  
+インサートモードを抜けると、`komadori#bundle()` を実行し終わります。  
 
 ---
 
 ```
-komadori#periodic(time)
+komadori#periodic#start(time)
 ```
 
-`time`ミリ秒の間隔でキャプチャを繰り返します。  
+`time` ミリ秒の間隔でキャプチャを繰り返します。  
 念のため 300カウントで自動的に終わるようになっています。  
 
-最後に`komadori#finish_periodic()`を実行して終わらせてください。  
+最後に `komadori#periodic#finish()` を実行して終わらせてください。  
 
 ---
 
 ```
-komadori#finish_periodic()
+komadori#periodic#finish()
 ```
 
-`komadori#periodic()`によって起動したプロセスを止めて  
+`komadori#periodic#start()` によって起動したプロセスを止めて  
 GIFファイルを作ります。  
-また単にGIFファイルをまとめたいときにも使うことできます。  
 
 ---
 
 ```
-komadori#pause_periodic()
+komadori#periodic#pause()
 ```
 
-（`g:komadori_use_python`が`1`のときのみ）  
-`komadori#periodic()`によって始めた自動キャプチャの  
+（ `g:komadori_use_python` が `1` のときのみ）  
+`komadori#periodic#start()` によって始めた自動キャプチャの  
 ポーズを行います。  
 
 ---
 
 ```
-komadori#restart_periodic()
+komadori#periodic#restart()
 ```
 
-（`g:komadori_use_python`が`1`のときのみ）  
-`komadori#pause_periodic()`によってポーズしているキャプチャを  
+（ `g:komadori_use_python` が `1` のときのみ）  
+`komadori#periodic#pause()` によってポーズしているキャプチャを  
 再開します。  
 
 ---
 
 ```
-komadori#gyazo_post()
+komadori#gyazo#post()
 ```
 
-gyazo.com に`g:komadori_save_file`の値のファイルを投稿します。  
+gyazo.com に `g:komadori_save_file` の値のファイルを投稿します。  
 
 ---
 
 ```
-komadori#gyazo_url()
+komadori#gyazo#url()
 ```
 
 gyazo.comに最後に投稿した画像のURLを返します。  
@@ -113,7 +134,7 @@ gyazo.comに最後に投稿した画像のURLを返します。
 ---
 
 ```
-komadori#open_gyazo_url()
+komadori#gyazo#open_url()
 ```
 
 openbrowser.vimで  
@@ -136,17 +157,23 @@ gyazo.comに最後に投稿した画像のURLを開きます。
  `0` のとき `komadori#preriodic()` で sh または PowerShell を使います。  
 
  `g:komadori_bundle_use_powershell` default `1`  
- `komadori#bundle()` と `komadori#finish_periodic` で使われます。  
+ `komadori#bundle()` と `komadori#all_bundle()` と `komadori#periodic#finish` で使われます。  
  Windows で ImageMagick を使って画像をまとめたいときに、  
  この値を `0` にすることで convert が実行されるように設定できます。  
  
+ `g:komadori_cursor_blink_control` default `1`
+ GVim を使っているときに `komadori#cmdlist#start()` の実行時に  
+ カーソルの点滅を止め、終了時にカーソルを点滅させるようにします。  
+
 #### コマンドリスト
+
 
  ComadoriStartPeriodic   
  ComadoriFinishPeriodic  
  ComadoriCapture         
  ComadoriBundle          
  ComadoriInsert          
+ ComadoriCmdlist         
  ComadoriGyazoPost       
  ComadoriYankGyazoUrl    
  ComadoriOpenGyazoUrl    
