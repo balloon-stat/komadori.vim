@@ -1,0 +1,248 @@
+*komadori.txt*
+
+Version: 0.1.0
+Author:  balloon-stat
+Last Change: 18-Sep-2014.
+License: The MIT License (MIT)
+
+Copyright (c) 2014 balloon-stat
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+CONTENTS						   *komadori-contents*
+
+Introduction					       |komadori-introduction|
+Interface						  |komadori-interface|
+  Commands						   |komadori-commands|
+  Functions						  |komadori-functions|
+  Variables						  |komadori-variables|
+
+==============================================================================
+INTRODUCTION					       *komadori-introduction*
+
+This plugin generates a GIF Animation of your working in Vim. This plugin has
+different behaviour between under MS-Windows and under X-Window System.
+Under MS-Windows, this plugin uses PowerShell. And, Under X-Window System,
+this plugin uses ImageMagick.
+
+Dependencies ~
+
+	* https://github.com/Shougo/vimproc.vim		(Optional)
+	* https://github.com/tyru/open-browser.vim	(Optional)
+	* ImageMagick	(Required, under X-Window System)
+			(Optional, under MS-Windows)
+	* xdotool	(Required, under X-Window System)
+	* xwininfo	(Required, under X-Window System)
+
+==============================================================================
+INTERFACE						  *komadori-interface*
+
+------------------------------------------------------------------------------
+COMMANDS						   *komadori-commands*
+
+						      *:ComadoriStartPeriodic*
+:ComadoriStartPeriodic
+	Command version of |komadori#periodic#start()|.
+
+						     *:ComadoriFinishPeriodic*
+:ComadoriFinishPeriodic
+	Command version of |komadori#periodic#finish()|.
+
+							    *:ComadoriCapture*
+:ComadoriCapture
+	Command version of |komadori#capture()|.
+
+							     *:ComadoriBundle*
+:ComadoriBundle
+	Command version of |komadori#bundle()|.
+
+							     *:ComadoriInsert*
+:ComadoriInsert
+	Command version of |komadori#insert#start()|.
+
+							    *:ComadoriCmdlist*
+:ComadoriCmdlist
+	Command version of |komadori#cmdlist#start()|.
+
+							  *:ComadoriGyazoPost*
+:ComadoriGyazoPost
+	Command version of |komadori#gyazo#post()|.
+
+						       *:ComadoriYankGyazoUrl*
+:ComadoriYankGyazoUrl
+	Yanks a url returning |komadori#gyazo#url()|.
+
+						       *:ComadoriOpenGyazoUrl*
+:ComadoriOpenGyazoUrl
+	Command version of |komadori#gyazo#open_url()|.
+
+------------------------------------------------------------------------------
+FUNCTIONS						  *komadori-functions*
+
+							  *komadori#capture()*
+komadori#capture()
+	Takes a screen-shot. This function |:echo| a message which means to
+	save a temporary image, if you want to suppress this message, call
+	with |:silent|.
+>
+    silent call komadori#capture()
+<
+							   *komadori#bundle()*
+komadori#bundle()
+	Finishes to take screen-shots and joins some images. A image will be
+	saved as |g:komadori_save_file|.
+
+						       *komadori#all_bundle()*
+komadori#all_bundle()
+	Joins all files which has same filename rule in |g:komadori_temp_dir|
+	and saves to |g:komadori_save_file|.
+
+							     *komadori#keep()*
+komadori#keep()
+	Uses a last screen-shot for this time.
+	NOTE: This function only works with PowerShell.
+
+						    *komadori#cmdlist#start()*
+komadori#cmdlist#start()
+	Starts to automatically execute each Ex command in the buffer in the
+	previous window, and captures by |komadori#capture()| every time. It
+	requires 2 windows, the target window and the cmdlist window. The
+	cmdlist window must have a text "cmdlist" at 1st line.
+	NOTE: When calls |komadori#cmdlist#start()|, the cursor have to place
+	on the target window.
+	NOTE: |:new| and |:vnew| and other commands that opens a new window
+	won't work well.
+
+	For example, you wrote commands into the cmdlist window's buffer
+	below:
+>
+	cmdlist
+	:echo "Example start"
+	ihello
+	:echo "Wrote `hello'"
+	:echo "Example end"
+<
+						     *komadori#insert#start()*
+komadori#insert#start()
+	Waits to input any key, then goes to insert-mode. On every
+	|CursorMovedI| event, takes a screen-shot using |komadori#capture()|.
+	On leaving insert-mode, joins all screen-shots using
+	|komadori#bundle()| and finishes.
+
+						   *komadori#periodic#start()*
+komadori#periodic#start({time})
+	Automatically takes a screen-shots periodically {time} milliseconds
+	until 300 times. You should call |komadori#periodic#finish()| to
+	finish it.
+
+						  *komadori#periodic#finish()*
+komadori#periodic#finish()
+	Kills a process which launched by |komadori#periodic#start()|. And
+	makes a GIF image.
+
+						   *komadori#periodic#pause()*
+komadori#periodic#pause()
+	Suspends a process which launched by |komadori#periodic#start()|.
+	NOTE: This function works only if |g:komadori_use_python| is 1.
+
+						 *komadori#periodic#restart()*
+komadori#periodic#restart()
+	Resumes a process which launched by |komadori#periodic#start()|.
+	NOTE: This function works only if |g:komadori_use_python| is 1.
+
+						       *komadori#gyazo#post()*
+komadori#gyazo#post()
+	Posts |g:komadori_save_file| to gyazo.com.
+
+							*komadori#gyazo#url()*
+komadori#gyazo#url()
+	Returns last url which was posted to gyazo.com.
+
+						   *komadori#gyazo#open_url()*
+komadori#gyazo#open_url()
+	Opens url returning |komadori#gyazo#url()| using |openbrowser.vim|.
+
+------------------------------------------------------------------------------
+VARIABLES						  *komadori-variables*
+
+							*g:komadori_save_file*
+g:komadori_save_file
+	(Default: "~/vim.gif")
+	Filename will be saved.
+
+							 *g:komadori_temp_dir*
+g:komadori_temp_dir
+	(Default: "~/")
+	Temporary image file directory.
+
+							 *g:komadori_interval*
+g:komadori_interval
+	(Default: 40)
+	Milliseconds for a frame.
+	NOTE: This value must be a multiple of 10.
+
+						      *g:komadori_margin_left*
+g:komadori_margin_left
+	(Default for MS-Windows: 8)
+	(Default for X-Window System: 0)
+	Margin of the left-side of the window.
+
+						       *g:komadori_margin_top*
+g:komadori_margin_top
+	(Default for MS-Windows: 100)
+	(Default for X-Window System: 0)
+	Margin of the top-side of the window.
+
+						     *g:komadori_margin_right*
+g:komadori_margin_right
+	(Default for MS-Windows: 8)
+	(Default for X-Window System: 0)
+	Margin of the right-side of the window.
+
+						    *g:komadori_margin_bottom*
+g:komadori_margin_bottom
+	(Default for MS-Windows: 8)
+	(Default for X-Window System: 0)
+	Margin of the bottom-side of the window.
+ 
+						       *g:komadori_use_python*
+g:komadori_use_python
+	(Default: 1)
+	Uses if_python or not. This value will effects on
+	|komadori#preriodic()|. When this value is 0, uses `sh' or
+	`PowerShell'.
+
+					    *g:komadori_bundle_use_powershell*
+g:komadori_bundle_use_powershell
+	(Default: 1)
+	Uses PowerShell on |komadori#bundle()|, |komadori#all_bundle()| or
+	|komadori#periodic#finish()|.
+	When you want to join images using ImageMagick under MS-Windows, these
+	functions will run external `convert' command by turning this value to
+	0.
+ 
+					     *g:komadori_cursor_blink_control*
+g:komadori_cursor_blink_control
+	(Default: 1)
+	Suppresses blinking cursor while running |komadori#cmdlist#start()|,
+	and restore state on finished.
+	NOTE: This is only for GVim.
+
+==============================================================================
+vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl
