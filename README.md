@@ -1,12 +1,17 @@
 komadori.vim
 ============
 
+version 0.1.0  
+
+This plugin generates a GIF Animation of your working in Vim.  
+For more English information, read doc/komadori.txt.  
+
 vimの作業画面をコマ撮りでGIFアニメにします。  
 windowsではPowerShellをX Window SystemではImageMagickを使います。  
 そのため、それぞれの挙動が少し異なります。  
 
-他にはvimprocも必要とします。  
-x Window SystemではImageMagickとxdotool、xwininfoも必要です。  
+x Window SystemではImageMagickとxdotool、xwininfoが必要です。  
+非同期で実行させるにはvimprocも必要になります。  
 
 下記の関数をキーにマップするか直接呼んで使ってください。  
 基本的には `komadori#capture()` を繰り返し行い  
@@ -64,6 +69,9 @@ cmdlist は１行目に cmdlist と書かれているかどうかで判断され
 それ以外はノーマルコマンドとして実行します。  
 また１行毎に `komadori#capture()` します。  
 cmdlist が終端に達すると `komadori#bundle()` を実行し終わります。  
+
+NOTE: cmdlist のウィンドウと操作対象のウィンドウの２つが必要です。  
+NOTE: ウィンドウを新しく開くコマンドはうまく動きません。  
 
 ---
 
